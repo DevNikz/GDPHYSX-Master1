@@ -1,0 +1,3 @@
+D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/CMakeFiles/glad-populate.dir
+D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/CMakeFiles/edit_cache.dir
+D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/CMakeFiles/rebuild_cache.dir

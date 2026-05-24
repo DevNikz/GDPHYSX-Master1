@@ -1,0 +1,21 @@
+# ninja log v6
+7	98	8013085502643431	glad-populate-prefix/src/glad-populate-stamp/glad-populate-mkdir	553acd5b5f98c80b
+7	98	8013085502643431	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/glad-populate-prefix/src/glad-populate-stamp/glad-populate-mkdir	553acd5b5f98c80b
+99	4493	8013085546615187	glad-populate-prefix/src/glad-populate-stamp/glad-populate-download	c39d7aa9c7f8aba2
+99	4493	8013085546615187	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/glad-populate-prefix/src/glad-populate-stamp/glad-populate-download	c39d7aa9c7f8aba2
+4493	4715	8013085546680313	glad-populate-prefix/src/glad-populate-stamp/glad-populate-update	f4c05d872e7e5b3
+4493	4715	8013085546680313	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/glad-populate-prefix/src/glad-populate-stamp/glad-populate-update	f4c05d872e7e5b3
+4715	4802	8013085549646153	glad-populate-prefix/src/glad-populate-stamp/glad-populate-patch	daf1f3372675492
+4715	4802	8013085549646153	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/glad-populate-prefix/src/glad-populate-stamp/glad-populate-patch	daf1f3372675492
+4802	4877	8013085550455676	glad-populate-prefix/src/glad-populate-stamp/glad-populate-configure	12dd0307cfb66cda
+4802	4877	8013085550455676	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/glad-populate-prefix/src/glad-populate-stamp/glad-populate-configure	12dd0307cfb66cda
+4877	4955	8013085551224062	glad-populate-prefix/src/glad-populate-stamp/glad-populate-build	a2008e318cbad4f2
+4877	4955	8013085551224062	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/glad-populate-prefix/src/glad-populate-stamp/glad-populate-build	a2008e318cbad4f2
+4955	5024	8013085551929892	glad-populate-prefix/src/glad-populate-stamp/glad-populate-install	1ad443fb92bbd97d
+4955	5024	8013085551929892	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/glad-populate-prefix/src/glad-populate-stamp/glad-populate-install	1ad443fb92bbd97d
+5024	5102	8013085552591168	glad-populate-prefix/src/glad-populate-stamp/glad-populate-test	709670a414736a1d
+5024	5102	8013085552591168	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/glad-populate-prefix/src/glad-populate-stamp/glad-populate-test	709670a414736a1d
+5102	5236	8013085554035119	CMakeFiles/glad-populate-complete	bc2c78c48aadb5fd
+5102	5236	8013085554035119	glad-populate-prefix/src/glad-populate-stamp/glad-populate-done	bc2c78c48aadb5fd
+5102	5236	8013085554035119	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/CMakeFiles/glad-populate-complete	bc2c78c48aadb5fd
+5102	5236	8013085554035119	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glad-subbuild/glad-populate-prefix/src/glad-populate-stamp/glad-populate-done	bc2c78c48aadb5fd

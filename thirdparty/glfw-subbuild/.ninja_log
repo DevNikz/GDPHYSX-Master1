@@ -1,0 +1,21 @@
+# ninja log v6
+6	113	8013085395800305	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-mkdir	d0befbdc98137faa
+6	113	8013085395800305	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-mkdir	d0befbdc98137faa
+114	9383	8013085488645227	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-download	f8aa0095672b484a
+114	9383	8013085488645227	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-download	f8aa0095672b484a
+9383	9593	8013085488729178	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-update	648f51cb04618ef
+9383	9593	8013085488729178	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-update	648f51cb04618ef
+9593	9683	8013085491507122	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-patch	13f0ad07885a7189
+9593	9683	8013085491507122	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-patch	13f0ad07885a7189
+9683	9760	8013085492419775	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-configure	ff40e84fb0b26555
+9683	9760	8013085492419775	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-configure	ff40e84fb0b26555
+9760	9835	8013085493168233	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-build	c4124ad9210b7833
+9760	9835	8013085493168233	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-build	c4124ad9210b7833
+9835	9910	8013085493929029	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-install	66094683e3777483
+9835	9910	8013085493929029	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-install	66094683e3777483
+9910	9992	8013085494738125	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-test	a9834efac1631788
+9910	9992	8013085494738125	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-test	a9834efac1631788
+9992	10094	8013085495770498	CMakeFiles/glfw-populate-complete	a535aceace126ca7
+9992	10094	8013085495770498	glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-done	a535aceace126ca7
+9992	10094	8013085495770498	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glfw-subbuild/CMakeFiles/glfw-populate-complete	a535aceace126ca7
+9992	10094	8013085495770498	D:/Coding/GDPHYSX/GDPHYSX-Master1/thirdparty/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-done	a535aceace126ca7
