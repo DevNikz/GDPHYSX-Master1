@@ -1,10 +1,8 @@
 ﻿#include "GDPHYSX-Master1.h"
-#include <random>
-#include <chrono>
-#include "Camera.h"
-#include "Particle.h"
-#include "Shader.h"
-
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "tiny_obj_loader.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 using namespace std;
 
 enum CameraType {
@@ -375,662 +373,6 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     }
 }
 
-//MODEL CLASS
-#ifndef MODEL_H
-class Model {
-private:
-    std::vector<tinyobj::shape_t> shapes;
-    std::vector<tinyobj::material_t> materials;
-    std::string error;
-    tinyobj::attrib_t attributes;
-    std::vector<GLuint> mesh_indices;
-    GLuint vao, vbo, ebo, vbo_uv;
-    std::vector<GLfloat> fullVertexData;
-    GLuint diffuseTexture;
-    GLuint normalTexture;
-    GLuint overlayTexture;
-    std::vector<glm::vec3> tangents;
-    std::vector<glm::vec3> bitangents;
-    glm::vec3 scale = glm::vec3(1.f);
-    Physics::Shader* shader;
-
-public:
-    string modelName;
-    string texName;
-    string normName;
-    string overlayName;
-    string baseMtl;
-
-    Model(string _name, string _tex, string _file, string _norm = "", string _normFile = "", string _over = "", string _overFile = "", string _mtlPath = "3D/");
-    void InitModel();
-    void InitCustomModel();
-    void InitCube();
-    void DrawCube();
-    void DrawModel();
-    void DeleteBuffers();
-    void InitTextures();
-    void InitOverlayMap();
-    void InitNormals();
-    void Scale(glm::vec3 s);
-    GLuint GetDiffuse();
-    GLuint GetNormal();
-    GLuint GetOverlay();
-    Physics::Shader* GetShader();
-    void AssignShader(Physics::Shader* s);
-};
-
-Physics::Shader* Model::GetShader() {
-    return this->shader;
-}
-
-void Model::AssignShader(Physics::Shader* s) {
-    this->shader = s;
-}
-
-GLuint Model::GetDiffuse() {
-    return this->diffuseTexture;
-}
-
-GLuint Model::GetNormal() {
-    return this->normalTexture;
-}
-
-GLuint Model::GetOverlay() {
-    return this->overlayTexture;
-}
-
-Model::Model(string _name, string _tex, string _file, string _norm, string _normFile, string _over, string _overFile, string _mtlPath) {
-    modelName = "3D/" + _name + ".obj";
-    texName = "3D/" + _tex + _file;
-    normName = "3D/" + _norm + _normFile;
-    overlayName = "3D/" + _over + _overFile;
-    baseMtl = _mtlPath;
-}
-
-void Model::InitOverlayMap() {
-    stbi_set_flip_vertically_on_load(true);
-    int img_width3, img_height3, colorChannels3;
-    GLenum format3{};
-    unsigned char* overlay_bytes = stbi_load(overlayName.c_str(), &img_width3, &img_height3, &colorChannels3, 0);
-
-    if (overlay_bytes) {
-        if (colorChannels3 == 1) format3 = GL_RED;
-        else if (colorChannels3 == 3) format3 = GL_RGB;
-        else if (colorChannels3 == 4) format3 = GL_RGBA;
-
-        //(TEXTURE) Load / bind after shaders
-        glGenTextures(1, &overlayTexture);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, overlayTexture);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0, //Texture 0
-            format3, //Target color format
-            img_width3,
-            img_height3,
-            0,
-            format3,
-            GL_UNSIGNED_BYTE,
-            overlay_bytes //loaded texture in bytes
-        );
-        glGenerateMipmap(GL_TEXTURE_2D);
-        stbi_image_free(overlay_bytes);
-    }
-
-    else {
-        stbi_image_free(overlay_bytes);
-    }
-}
-
-void Model::InitTextures() {
-    stbi_set_flip_vertically_on_load(true);
-    int img_width, img_height, colorChannels;
-    GLenum format{};
-    unsigned char* tex_bytes = stbi_load(texName.c_str(), &img_width, &img_height, &colorChannels, 0);
-
-    if (tex_bytes) {
-        GLenum format = (colorChannels == 4) ? GL_RGBA : GL_RGB;
-
-        //(TEXTURE) Load / bind after shaders
-        glGenTextures(1, &diffuseTexture);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseTexture);
-
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0, //Texture 0
-            format, //Target color format
-            img_width,
-            img_height,
-            0,
-            format,
-            GL_UNSIGNED_BYTE,
-            tex_bytes //loaded texture in bytes
-        );
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-        // Filtering
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        // Anisotropic filtering
-        float maxAniso = 8.f;
-        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
-
-        stbi_image_free(tex_bytes);
-    }
-
-    else {
-        stbi_image_free(tex_bytes);
-    }
-}
-
-void Model::InitNormals() {
-    int img_width2, img_height2, colorChannels2;
-    unsigned char* normal_bytes = stbi_load(normName.c_str(), &img_width2, &img_height2, &colorChannels2, 0);
-
-    if (normal_bytes) {
-        GLenum format = (colorChannels2 == 4) ? GL_RGBA : GL_RGB;
-        //(TEXTURE) Load / bind after shaders
-        glGenTextures(1, &normalTexture);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, normalTexture);
-
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            format, //Target color format
-            img_width2,
-            img_height2,
-            0,
-            format,
-            GL_UNSIGNED_BYTE,
-            normal_bytes //loaded texture in bytes
-        );
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-        // Filtering
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        // Anisotropic filtering
-        float maxAniso = 8.f;
-        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
-
-        stbi_image_free(normal_bytes);
-    }
-    else {
-        stbi_image_free(normal_bytes);
-    }
-}
-
-void Model::DrawCube() {
-    glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, mesh_indices.size(), GL_UNSIGNED_INT, 0);
-}
-
-void Model::DrawModel() {
-    glm::mat4 m = glm::mat4(1.0f);
-    m = glm::translate(m, glm::vec3(0.f, 0.f, 0.f));
-    m = glm::scale(m, scale);
-    this->shader->setMat4("transform", 1, m);
-    //noobShader.setMat4("transform", 1, m);
-
-    glBindVertexArray(vao);
-    //Vertex Data Method
-    glDrawArrays(GL_TRIANGLES, 0, fullVertexData.size() / 8);
-}
-
-void Model::Scale(glm::vec3 s) {
-    scale = s;
-}
-
-void Model::DeleteBuffers() {
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
-}
-
-void Model::InitCube() {
-    //Load Object. If success, it loads
-    bool success = tinyobj::LoadObj(
-        &attributes,
-        &shapes,
-        &materials,
-        &error,
-        modelName.c_str()
-    );
-
-    for (int i = 0; i < shapes[0].mesh.indices.size(); i++) {
-        mesh_indices.push_back(
-            shapes[0].mesh.indices[i].vertex_index
-        );
-    }
-
-    //(SHADERS) Generate vertices and buffers
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &vbo_uv);
-    glGenBuffers(1, &ebo);
-
-    //(POSITIONS) VBO
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(GL_FLOAT) * attributes.vertices.size(),
-        &attributes.vertices[0],
-        GL_DYNAMIC_DRAW
-    );
-
-    //EBO
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER,
-        sizeof(GLuint) * mesh_indices.size(),
-        mesh_indices.data(),
-        GL_DYNAMIC_DRAW
-    );
-    glVertexAttribPointer(
-        //0 = Position
-        0, // Index / buffer index
-        3, // x y z
-        GL_FLOAT, // array of floats
-        GL_FALSE, // if its normalized
-        3 * sizeof(float), // size of data per vertex
-        (void*)0
-    );
-    glEnableVertexAttribArray(0);
-
-    //UV
-    glBindBuffer(GL_ARRAY_BUFFER, vbo_uv);
-    glBufferData(GL_ARRAY_BUFFER,
-        sizeof(float) * (sizeof(UV) / sizeof(UV[0])),
-        &UV[0],
-        GL_DYNAMIC_DRAW
-    );
-
-    glVertexAttribPointer(
-        2,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-        2 * sizeof(float),
-        (void*)0
-    );
-    glEnableVertexAttribArray(2);
-    glBindVertexArray(0);
-}
-
-void Model::InitModel() {
-    //Load Object. If success, it loads
-    bool success = tinyobj::LoadObj(
-        &attributes,
-        &shapes,
-        &materials,
-        &error,
-        modelName.c_str()
-    );
-
-
-
-    for (int i = 0; i < shapes.size(); i++) {
-        for (int j = 0; j < shapes[i].mesh.indices.size(); j += 3) {
-            tinyobj::index_t vData1 = shapes[i].mesh.indices[j];
-            tinyobj::index_t vData2 = shapes[i].mesh.indices[j + 1];
-            tinyobj::index_t vData3 = shapes[i].mesh.indices[j + 2];
-
-            //Pos
-            glm::vec3 v1 = glm::vec3(
-                attributes.vertices[vData1.vertex_index * 3],
-                attributes.vertices[vData1.vertex_index * 3 + 1],
-                attributes.vertices[vData1.vertex_index * 3 + 2]
-            );
-
-            glm::vec3 v2 = glm::vec3(
-                attributes.vertices[vData2.vertex_index * 3],
-                attributes.vertices[vData2.vertex_index * 3 + 1],
-                attributes.vertices[vData2.vertex_index * 3 + 2]
-            );
-
-            glm::vec3 v3 = glm::vec3(
-                attributes.vertices[vData3.vertex_index * 3],
-                attributes.vertices[vData3.vertex_index * 3 + 1],
-                attributes.vertices[vData3.vertex_index * 3 + 2]
-            );
-
-            //UV
-            glm::vec2 uv1 = glm::vec2(
-                attributes.texcoords[(vData1.texcoord_index * 2)],
-                attributes.texcoords[(vData1.texcoord_index * 2) + 1]
-            );
-
-            glm::vec2 uv2 = glm::vec2(
-                attributes.texcoords[(vData2.texcoord_index * 2)],
-                attributes.texcoords[(vData2.texcoord_index * 2) + 1]
-            );
-
-            glm::vec2 uv3 = glm::vec2(
-                attributes.texcoords[(vData3.texcoord_index * 2)],
-                attributes.texcoords[(vData3.texcoord_index * 2) + 1]
-            );
-
-            glm::vec3 deltaPos1 = v2 - v1;
-            glm::vec3 deltaPos2 = v3 - v1;
-
-            glm::vec2 deltaUV1 = uv2 - uv1;
-            glm::vec2 deltaUV2 = uv3 - uv1;
-
-            float r = 1.0f / ((deltaUV1.x * deltaUV2.y) - (deltaUV1.y * deltaUV2.x));
-            glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
-            glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
-
-            tangents.push_back(tangent);
-            tangents.push_back(tangent);
-            tangents.push_back(tangent);
-
-            bitangents.push_back(bitangent);
-            bitangents.push_back(bitangent);
-            bitangents.push_back(bitangent);
-        }
-    }
-
-    for (int i = 0; i < shapes.size(); i++) {
-        for (int j = 0; j < shapes[i].mesh.indices.size(); j++) {
-            tinyobj::index_t vData = shapes[i].mesh.indices[j];
-            fullVertexData.push_back(attributes.vertices[(vData.vertex_index * 3)]); //X
-            fullVertexData.push_back(attributes.vertices[(vData.vertex_index * 3) + 1]); //Y
-            fullVertexData.push_back(attributes.vertices[(vData.vertex_index * 3) + 2]); //Z
-            fullVertexData.push_back(attributes.normals[(vData.normal_index * 3)]);
-            fullVertexData.push_back(attributes.normals[(vData.normal_index * 3) + 1]);
-            fullVertexData.push_back(attributes.normals[(vData.normal_index * 3) + 2]);
-            fullVertexData.push_back(attributes.texcoords[(vData.texcoord_index * 2)]); //U
-            fullVertexData.push_back(attributes.texcoords[(vData.texcoord_index * 2) + 1]); //V
-
-            fullVertexData.push_back(tangents[i].x);
-            fullVertexData.push_back(tangents[i].y);
-            fullVertexData.push_back(tangents[i].z);
-            fullVertexData.push_back(bitangents[i].x);
-            fullVertexData.push_back(bitangents[i].y);
-            fullVertexData.push_back(bitangents[i].z);
-        }
-    }
-
-
-    GLintptr normalPtr = 3 * sizeof(float);
-    GLintptr uvPtr = 6 * sizeof(float);
-    GLintptr tangentPtr = 8 * sizeof(float);
-    GLintptr bitangentPtr = 11 * sizeof(float);
-
-    //(SHADERS) Generate vertices and buffers
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    //(POSITIONS) VBO
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-    //Using fullvertexdata
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(GLfloat) * fullVertexData.size(),
-        fullVertexData.data(),
-        GL_DYNAMIC_DRAW
-    );
-    glVertexAttribPointer(
-        0, // Index / buffer index
-        3, // x y z
-        GL_FLOAT, // array of floats
-        GL_FALSE, // if its normalized
-        14 * sizeof(GLfloat), // size of data per vertex
-        (void*)0
-    );
-    glEnableVertexAttribArray(0);
-
-    //Normal
-    glVertexAttribPointer(
-        1,
-        3, // x y z
-        GL_FLOAT, // array of floats
-        GL_FALSE, // if its normalized
-        14 * sizeof(GLfloat), // size of data per vertex
-        (void*)normalPtr
-    );
-    glEnableVertexAttribArray(1);
-
-    //UV
-    glVertexAttribPointer(
-        2,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-        14 * sizeof(GLfloat),
-        (void*)uvPtr
-    );
-    glEnableVertexAttribArray(2);
-
-    //Tangent
-    glVertexAttribPointer(
-        3,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        14 * sizeof(GLfloat),
-        (void*)tangentPtr
-    );
-    glEnableVertexAttribArray(3);
-
-    //Bitangent
-    glVertexAttribPointer(
-        4,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        14 * sizeof(GLfloat),
-        (void*)bitangentPtr
-    );
-    glEnableVertexAttribArray(4);
-
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-void Model::InitCustomModel() {
-    //Load Object. If success, it loads
-    bool success = tinyobj::LoadObj(
-        &attributes,
-        &shapes,
-        &materials,
-        &error,
-        modelName.c_str(),
-        baseMtl.c_str()
-    );
-
-    if (texName == "3D/" && !materials.empty() && !materials[0].diffuse_texname.empty())
-        texName = baseMtl + materials[0].diffuse_texname;
-
-    if (normName == "3D/" && !materials.empty() && !materials[0].bump_texname.empty())
-        normName = baseMtl + materials[0].bump_texname;
-
-    for (int i = 0; i < shapes.size(); i++) {
-        for (int j = 0; j < shapes[i].mesh.indices.size(); j += 3) {
-            tinyobj::index_t vData1 = shapes[i].mesh.indices[j];
-            tinyobj::index_t vData2 = shapes[i].mesh.indices[j + 1];
-            tinyobj::index_t vData3 = shapes[i].mesh.indices[j + 2];
-
-            //Pos
-            glm::vec3 v1 = glm::vec3(
-                attributes.vertices[vData1.vertex_index * 3],
-                attributes.vertices[vData1.vertex_index * 3 + 1],
-                attributes.vertices[vData1.vertex_index * 3 + 2]
-            );
-
-            glm::vec3 v2 = glm::vec3(
-                attributes.vertices[vData2.vertex_index * 3],
-                attributes.vertices[vData2.vertex_index * 3 + 1],
-                attributes.vertices[vData2.vertex_index * 3 + 2]
-            );
-
-            glm::vec3 v3 = glm::vec3(
-                attributes.vertices[vData3.vertex_index * 3],
-                attributes.vertices[vData3.vertex_index * 3 + 1],
-                attributes.vertices[vData3.vertex_index * 3 + 2]
-            );
-
-            //UV
-            glm::vec2 uv1 = glm::vec2(
-                attributes.texcoords[(vData1.texcoord_index * 2)],
-                attributes.texcoords[(vData1.texcoord_index * 2) + 1]
-            );
-
-            glm::vec2 uv2 = glm::vec2(
-                attributes.texcoords[(vData2.texcoord_index * 2)],
-                attributes.texcoords[(vData2.texcoord_index * 2) + 1]
-            );
-
-            glm::vec2 uv3 = glm::vec2(
-                attributes.texcoords[(vData3.texcoord_index * 2)],
-                attributes.texcoords[(vData3.texcoord_index * 2) + 1]
-            );
-
-            glm::vec3 deltaPos1 = v2 - v1;
-            glm::vec3 deltaPos2 = v3 - v1;
-
-            glm::vec2 deltaUV1 = uv2 - uv1;
-            glm::vec2 deltaUV2 = uv3 - uv1;
-
-            float r = 1.0f / ((deltaUV1.x * deltaUV2.y) - (deltaUV1.y * deltaUV2.x));
-            glm::vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
-            glm::vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
-
-            tangents.push_back(tangent);
-            tangents.push_back(tangent);
-            tangents.push_back(tangent);
-
-            bitangents.push_back(bitangent);
-            bitangents.push_back(bitangent);
-            bitangents.push_back(bitangent);
-        }
-    }
-
-    for (int i = 0; i < shapes.size(); i++) {
-        for (int j = 0; j < shapes[i].mesh.indices.size(); j++) {
-            tinyobj::index_t vData = shapes[i].mesh.indices[j];
-            fullVertexData.push_back(attributes.vertices[(vData.vertex_index * 3)]); //X
-            fullVertexData.push_back(attributes.vertices[(vData.vertex_index * 3) + 1]); //Y
-            fullVertexData.push_back(attributes.vertices[(vData.vertex_index * 3) + 2]); //Z
-            fullVertexData.push_back(attributes.normals[(vData.normal_index * 3)]);
-            fullVertexData.push_back(attributes.normals[(vData.normal_index * 3) + 1]);
-            fullVertexData.push_back(attributes.normals[(vData.normal_index * 3) + 2]);
-            fullVertexData.push_back(attributes.texcoords[(vData.texcoord_index * 2)]); //U
-            fullVertexData.push_back(attributes.texcoords[(vData.texcoord_index * 2) + 1]); //V
-
-            fullVertexData.push_back(tangents[i].x);
-            fullVertexData.push_back(tangents[i].y);
-            fullVertexData.push_back(tangents[i].z);
-            fullVertexData.push_back(bitangents[i].x);
-            fullVertexData.push_back(bitangents[i].y);
-            fullVertexData.push_back(bitangents[i].z);
-        }
-    }
-
-
-    GLintptr normalPtr = 3 * sizeof(float);
-    GLintptr uvPtr = 6 * sizeof(float);
-    GLintptr tangentPtr = 8 * sizeof(float);
-    GLintptr bitangentPtr = 11 * sizeof(float);
-
-    //(SHADERS) Generate vertices and buffers
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    //(POSITIONS) VBO
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-    //Using fullvertexdata
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(GLfloat) * fullVertexData.size(),
-        fullVertexData.data(),
-        GL_DYNAMIC_DRAW
-    );
-    glVertexAttribPointer(
-        0, // Index / buffer index
-        3, // x y z
-        GL_FLOAT, // array of floats
-        GL_FALSE, // if its normalized
-        14 * sizeof(GLfloat), // size of data per vertex
-        (void*)0
-    );
-    glEnableVertexAttribArray(0);
-
-    //Normal
-    glVertexAttribPointer(
-        1,
-        3, // x y z
-        GL_FLOAT, // array of floats
-        GL_FALSE, // if its normalized
-        14 * sizeof(GLfloat), // size of data per vertex
-        (void*)normalPtr
-    );
-    glEnableVertexAttribArray(1);
-
-    //UV
-    glVertexAttribPointer(
-        2,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-        14 * sizeof(GLfloat),
-        (void*)uvPtr
-    );
-    glEnableVertexAttribArray(2);
-
-    //Tangent
-    glVertexAttribPointer(
-        3,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        14 * sizeof(GLfloat),
-        (void*)tangentPtr
-    );
-    glEnableVertexAttribArray(3);
-
-    //Bitangent
-    glVertexAttribPointer(
-        4,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        14 * sizeof(GLfloat),
-        (void*)bitangentPtr
-    );
-    glEnableVertexAttribArray(4);
-
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-#endif
-
 #ifndef SKYBOX_H
 float skyboxVertices[]{
     -1.f, -1.f, 1.f, //0
@@ -1189,7 +531,7 @@ int main(void)
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_SAMPLES, 8);
 
-    window = glfwCreateWindow(windowWidth, windowHeight, "GRAPH-MP_Ragudo_Nikko_Taylan_EJ", NULL, NULL);
+    window = glfwCreateWindow(windowWidth, windowHeight, "GDPHYSICS-Niks", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -1219,8 +561,7 @@ int main(void)
     //skybox.InitTextures();
 
     //Model shipmentObj = Model("Sci-fi Large container", "Sci-fi Container _Base_Color", ".png", "Sci-fi Container _Normal_OpenGL", ".png", "", "", "3D/");
-
-    Model sphereModel = Model("sphere", "", "");
+    Physics::Model sphereModel = Physics::Model("sphere", "", "");
 
     //Create new model plane then initialize texture, overlay map, and normals
     //newModel.InitModel();
@@ -1228,17 +569,17 @@ int main(void)
     //newModel.InitNormals();
 
     sphereModel.InitModel();
-    sphereModel.Scale(glm::vec3(50.f));
+    sphereModel.Scale(glm::vec3(100.f));
     sphereModel.AssignShader(&noobShader);
 
     //Camera instances
     topDown.Projection = glm::ortho(
-        -500.f, //L
-        500.f, //R
-        -500.f, //Bottom
-        500.f, //Top
-        -500.0f, //Near
-        500.f //Far
+        -400.f, //L
+        400.f, //R
+        -400.f, //Bottom
+        400.f, //Top
+        -400.0f, //Near
+        400.f //Far
     );
 
     //Enable anti-aliasing and blend
@@ -1247,6 +588,9 @@ int main(void)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
+
+    Physics::Particle particle = Physics::Particle();
+    particle.Velocity = glm::vec3(250, 0, 0);
 
     using clock = std::chrono::high_resolution_clock;
     auto curr_time = clock::now();
@@ -1259,6 +603,16 @@ int main(void)
         /* Poll for and process events */
         glfwPollEvents();
 
+        //Right side
+        if (particle.GetPosition().x > 350) {
+            particle.Velocity = glm::vec3(-250, 0, 0);
+        }
+
+        //Left side
+        if (particle.GetPosition().x < -350) {
+            particle.Velocity = glm::vec3(250, 0, 0);
+        }
+
         curr_time = clock::now();
         auto dur = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - prev_time);
         prev_time = curr_time;
@@ -1266,12 +620,13 @@ int main(void)
         curr_ns += dur;
         if (curr_ns >= timestep) {
             constexpr float timestep_sec = timestep.count() / (float)(1E09);
+            curr_ns -= timestep;
+
+            //Physics Update
+            particle.Update(timestep_sec);
         }
 
-
-        float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        //Normal Update
 
         processInput(window);
         /* Render here */
@@ -1297,10 +652,7 @@ int main(void)
         noobShader.use();
         noobShader.passOrthoCamera(topDown);
 
-        /*glm::mat4 sphereM = glm::mat4(1.0f);
-        sphereM = glm::translate(sphereM, glm::vec3(0.f, 0.f, 0.f));
-        sphereM = glm::scale(sphereM, glm::vec3(50.0f));
-        noobShader.setMat4("transform", 1, sphereM);*/
+        sphereModel.Position(particle.Position);
         sphereModel.DrawModel();
 
         /*

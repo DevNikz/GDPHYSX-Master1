@@ -16,6 +16,7 @@ namespace Physics{
 			glm::vec3 Acceleration;
 
 			void Update(float time);
+			glm::vec3 GetPosition();
 
 			Particle();
 	};

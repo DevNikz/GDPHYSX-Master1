@@ -8,20 +8,12 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include <random>
+#include <chrono>
+
+#include "Camera.h"
+#include "Particle.h"
+#include "Shader.h"
+#include "Model.h"
 
 using namespace std;
-
-GLfloat UV[]{
-    0.f, 1.f,
-    0.f, 0.f,
-    1.f, 1.f,
-    1.f, 0.f,
-    1.f, 1.f,
-    1.f, 0.f,
-    0.f, 1.f,
-    0.f, 0.f
-};

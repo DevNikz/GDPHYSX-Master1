@@ -18,6 +18,11 @@ namespace Physics {
 		this->UpdateVelocity(time);
 	}
 
+	glm::vec3 Particle::GetPosition()
+	{
+		return this->Position;
+	}
+
 	Particle::Particle()
 	{
 		this->Position = glm::vec3(0, 0, 0);
