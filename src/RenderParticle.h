@@ -1,5 +1,5 @@
-#include "Particle.h"
-#include "Model.h"
+#include "Physics/Particle.h"
+#include "../Model.h"
 
 namespace Physics {
 	class RenderParticle {

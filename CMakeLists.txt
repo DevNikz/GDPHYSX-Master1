@@ -17,6 +17,8 @@ project ("GDPHYSX-Master1")
 include(FetchContent)
 
 # Set directory of third party libraries
+set(FETCHCONTENT_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE PATH "Base Directory of Source Files" FORCE)
+set(FETCHCONTENT_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/Physics CACHE PATH "Base Directory of Physics Source Files" FORCE)
 set(FETCHCONTENT_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty CACHE PATH "Base Directory of libs" FORCE)
 
 #Get GLFW
@@ -66,7 +68,7 @@ find_package(OpenGL REQUIRED)
 
 # Add source to this project's executable.
 # Change these to your files
-add_executable (GDPHYSX-Master1 "GDPHYSX-Master1.cpp" "GDPHYSX-Master1.h" "tiny_obj_loader.h" "stb_image.h"   "Particle.h" "Particle.cpp" "Shader.h" "Camera.h" "Camera.cpp" "Shader.cpp" "RenderParticle.h" "Model.h" "Model.cpp" "RenderParticle.cpp")
+add_executable (GDPHYSX-Master1 "GDPHYSX-Master1.cpp" "GDPHYSX-Master1.h" "tiny_obj_loader.h" "stb_image.h"  "src/Physics/Particle.h" "src/Physics/Particle.cpp" "Shader.h" "Camera.h" "Camera.cpp" "Shader.cpp" "Model.h" "Model.cpp" "src/RenderParticle.h" "src/RenderParticle.cpp" )
 
 #Link the required libraries
 target_link_libraries(GDPHYSX-Master1 PRIVATE 

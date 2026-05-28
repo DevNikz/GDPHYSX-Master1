@@ -13,10 +13,10 @@
 #include <list>
 #include <iomanip>
 #include "Camera.h"
-#include "Particle.h"
+#include "src/Physics/Particle.h"
 #include "Shader.h"
 #include "Model.h"
-#include "RenderParticle.h"
+#include "src/RenderParticle.h"
 
 using namespace std;
 using namespace Physics;
