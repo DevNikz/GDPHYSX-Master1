@@ -12,6 +12,16 @@ namespace Physics {
 		this->Velocity = this->Velocity + (this->Acceleration * deltaTime);
 	}
 
+	void Particle::Destroy()
+	{
+		isDestroyed = true;
+	}
+
+	bool Particle::IsDestroyed()
+	{
+		return isDestroyed;
+	}
+
 	void Particle::Update(float time)
 	{
 		this->UpdatePosition(time);

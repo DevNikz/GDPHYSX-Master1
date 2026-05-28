@@ -14,6 +14,7 @@
 #include <iomanip>
 #include "Camera.h"
 #include "src/Physics/Particle.h"
+#include "src/Physics/PhysicsWorld.h"
 #include "Shader.h"
 #include "Model.h"
 #include "src/RenderParticle.h"

@@ -3,6 +3,8 @@
 #include "tiny_obj_loader.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <memory>
+
 using namespace std;
 
 enum CameraType {
@@ -516,18 +518,6 @@ void Skybox::InitSky() {
     glEnableVertexAttribArray(0);
 }
 #endif
-
-bool stopAtCenter(Particle& p, float threshold = 5.f) {
-    if (glm::length(glm::vec2(p.Position.x, p.Position.y)) <= threshold) {
-        p.Position.x = 0.f;
-        p.Position.y = 0.f;
-        p.Velocity = glm::vec3(0.f);
-        p.Acceleration = glm::vec3(0.f);
-        return true;
-    }
-    else return false;
-}
-
 struct ParticleResult {
     std::string name;
     glm::vec3 color;
@@ -540,6 +530,18 @@ struct ParticleResult {
     glm::vec3 startPos;
     float elapsedTime = 0.f;
 };
+
+bool AtCenter(Particle& p, ParticleResult& r, float t, float threshold = 5.f) {
+    r.elapsedTime += t;
+
+    if (glm::length(glm::vec2(p.Position.x, p.Position.y)) <= threshold) {
+        p.Position.x = 0.f;
+        p.Position.y = 0.f;
+        return true;
+    }
+    else return false;
+}
+
 
 //MAIN
 int main(void)
@@ -582,6 +584,8 @@ int main(void)
     Shader noobShader("Shaders/noobShader.vert", "Shaders/noobShader.frag");
 
     std::list<RenderParticle*> RenderParticles;
+    /*PhysicsWorld* pWorld = new PhysicsWorld();*/
+    auto pWorld = std::make_unique<PhysicsWorld>();
     float edge = 650.f;
 
     //Skybox skybox("cubemap1_right", "cubemap1_left", "cubemap1_top", "cubemap1_bottom", "cubemap1_front", "cubemap1_back");
@@ -589,45 +593,49 @@ int main(void)
     //skybox.InitTextures();
 
     //Model shipmentObj = Model("Sci-fi Large container", "Sci-fi Container _Base_Color", ".png", "Sci-fi Container _Normal_OpenGL", ".png", "", "", "3D/");
-    Physics::Model sphereModel = Physics::Model("sphere", "", "");
-
-    sphereModel.InitModel();
-    sphereModel.Scale(glm::vec3(10.f));
-    sphereModel.AssignShader(&noobShader);
+    /*Model* sphereModel = new Model("sphere", "", "");*/
+    auto sphereModel = std::make_unique<Model>("sphere", "", "");
+    sphereModel->InitModel();
+    sphereModel->Scale(glm::vec3(10.f));
+    sphereModel->AssignShader(&noobShader);
 
     //Red
-    Physics::Particle p1;
-    p1.Position = glm::vec3(-edge, edge, 201.f);
-    p1.Velocity = glm::vec3(80.f, -80.f, 0.f);
-    p1.Acceleration = glm::vec3(14.5f, -14.5f, 0.f);
+    auto p1 = std::make_unique<Particle>();
+    p1->Position = glm::vec3(-edge, edge, 201.f);
+    p1->Velocity = glm::vec3(80.f, -80.f, 0.f);
+    p1->Acceleration = glm::vec3(14.5f, -14.5f, 0.f);
+    pWorld->AddParticle(p1.get());
 
     //Green
-    Physics::Particle p2;
-    p2.Position = glm::vec3(edge, edge, 173.f);
-    p2.Velocity = glm::vec3(-90.f, -90.f, 0.f);
-    p2.Acceleration = glm::vec3(-8.f, -8.f, 0.f);
+    auto p2 = std::make_unique<Particle>();
+    p2->Position = glm::vec3(edge, edge, 173.f);
+    p2->Velocity = glm::vec3(-90.f, -90.f, 0.f);
+    p2->Acceleration = glm::vec3(-8.f, -8.f, 0.f);
+    pWorld->AddParticle(p2.get());
 
     //Blue
-    Physics::Particle p3;
-    p3.Position = glm::vec3(edge, -edge, -300.f);
-    p3.Velocity = glm::vec3(-130.f, 130.f, 0.f);
-    p3.Acceleration = glm::vec3(-1.f, 1.f, 0.f);
+    auto p3 = std::make_unique<Particle>();
+    p3->Position = glm::vec3(edge, -edge, -300.f);
+    p3->Velocity = glm::vec3(-130.f, 130.f, 0.f);
+    p3->Acceleration = glm::vec3(-1.f, 1.f, 0.f);
+    pWorld->AddParticle(p3.get());
 
     //Yellow
-    Physics::Particle p4;
-    p4.Position = glm::vec3(-edge, -edge, -150.f);
-    p4.Velocity = glm::vec3(110.f, 110.f, 0.f);
-    p4.Acceleration = glm::vec3(3.f, 3.f, 0.f);
+    auto p4 = std::make_unique<Particle>();
+    p4->Position = glm::vec3(-edge, -edge, -150.f);
+    p4->Velocity = glm::vec3(110.f, 110.f, 0.f);
+    p4->Acceleration = glm::vec3(3.f, 3.f, 0.f);
+    pWorld->AddParticle(p4.get());
 
     
-    RenderParticle rp1 = RenderParticle(&p1, &sphereModel, glm::vec3(0.5f, 0.f, 0.f));
-    RenderParticle rp2 = RenderParticle(&p2, &sphereModel, glm::vec3(0.f, 0.5f, 0.f));
-    RenderParticle rp3 = RenderParticle(&p3, &sphereModel, glm::vec3(0.f, 0.f, 0.5f));
-    RenderParticle rp4 = RenderParticle(&p4, &sphereModel, glm::vec3(0.5f, 0.5f, 0.f));
-    RenderParticles.push_back(&rp1);
-    RenderParticles.push_back(&rp2);
-    RenderParticles.push_back(&rp3);
-    RenderParticles.push_back(&rp4);
+    RenderParticle* rp1 = new RenderParticle(p1.get(), sphereModel.get(), glm::vec3(0.5f, 0.f, 0.f));
+    RenderParticle* rp2 = new RenderParticle(p2.get(), sphereModel.get(), glm::vec3(0.f, 0.5f, 0.f));
+    RenderParticle* rp3 = new RenderParticle(p3.get(), sphereModel.get(), glm::vec3(0.f, 0.f, 0.5f));
+    RenderParticle* rp4 = new RenderParticle(p4.get(), sphereModel.get(), glm::vec3(0.5f, 0.5f, 0.f));
+    RenderParticles.push_back(rp1);
+    RenderParticles.push_back(rp2);
+    RenderParticles.push_back(rp3);
+    RenderParticles.push_back(rp4);
 
     //Enable anti-aliasing and blend
     glEnable(GL_MULTISAMPLE);
@@ -642,10 +650,10 @@ int main(void)
     std::chrono::nanoseconds curr_ns(0);
 
     ParticleResult results[4];
-    results[0] = { "Red", glm::vec3(1,0,0), 0, 0, glm::vec3(0.f), 0, false, p1.GetPosition()};
-    results[1] = { "Green", glm::vec3(0,1,0), 0, 0, glm::vec3(0.f), 0, false, p2.GetPosition() };
-    results[2] = { "Blue", glm::vec3(0,0,1), 0, 0, glm::vec3(0.f), 0, false, p3.GetPosition() };
-    results[3] = { "Yellow", glm::vec3(1,1,0), 0, 0, glm::vec3(0.f), 0, false, p4.GetPosition() };
+    results[0] = { "Red", glm::vec3(1,0,0), 0, 0, glm::vec3(0.f), 0, false, p1->GetPosition()};
+    results[1] = { "Green", glm::vec3(0,1,0), 0, 0, glm::vec3(0.f), 0, false, p2->GetPosition() };
+    results[2] = { "Blue", glm::vec3(0,0,1), 0, 0, glm::vec3(0.f), 0, false, p3->GetPosition() };
+    results[3] = { "Yellow", glm::vec3(1,1,0), 0, 0, glm::vec3(0.f), 0, false, p4->GetPosition() };
 
     int rankCounter = 1;
 
@@ -679,9 +687,11 @@ int main(void)
 
                 p.Velocity = glm::vec3(0.f);
                 p.Acceleration = glm::vec3(0.f);
+
+                p.Destroy();
             }
 
-        };
+         };
 
         curr_ns += dur;
         if (curr_ns >= timestep) {
@@ -689,23 +699,18 @@ int main(void)
             curr_ns -= timestep;
 
             //Physics Update
-            p1.Update(timestep_sec);
-            checkFinish(p1, results[0], timestep_sec);
-            
-            p2.Update(timestep_sec);
-            checkFinish(p2, results[1], timestep_sec);
+            pWorld->Update(timestep_sec);
 
-            p3.Update(timestep_sec);
-            checkFinish(p3, results[2], timestep_sec);
+            checkFinish(*p1, results[0], timestep_sec);
+            checkFinish(*p2, results[1], timestep_sec);
+            checkFinish(*p3, results[2], timestep_sec);
+            checkFinish(*p4, results[3], timestep_sec);
 
-            p4.Update(timestep_sec);
-            checkFinish(p4, results[3], timestep_sec);
-
-            if (results[0].finished && results[1].finished && results[2].finished && results[3].finished) {
+            if (p1->IsDestroyed() && p2->IsDestroyed() && p3->IsDestroyed() && p4->IsDestroyed()) {
                 glfwSetWindowShouldClose(window, true);
             }
         }
-
+            
         //Normal Update
 
         processInput(window);
@@ -764,8 +769,7 @@ int main(void)
         glfwSwapBuffers(window);
     }
 
-    //Tank
-    sphereModel.DeleteBuffers();
+    sphereModel->DeleteBuffers();
     
     std::cout << std::fixed << std::setprecision(2);
     std::vector<ParticleResult*> sorted = { &results[0], &results[1], &results[2], &results[3] };

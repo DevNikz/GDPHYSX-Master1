@@ -68,7 +68,7 @@ find_package(OpenGL REQUIRED)
 
 # Add source to this project's executable.
 # Change these to your files
-add_executable (GDPHYSX-Master1 "GDPHYSX-Master1.cpp" "GDPHYSX-Master1.h" "tiny_obj_loader.h" "stb_image.h"  "src/Physics/Particle.h" "src/Physics/Particle.cpp" "Shader.h" "Camera.h" "Camera.cpp" "Shader.cpp" "Model.h" "Model.cpp" "src/RenderParticle.h" "src/RenderParticle.cpp" )
+add_executable (GDPHYSX-Master1 "GDPHYSX-Master1.cpp" "GDPHYSX-Master1.h" "tiny_obj_loader.h" "stb_image.h"  "src/Physics/Particle.h" "src/Physics/Particle.cpp" "Shader.h" "Camera.h" "Camera.cpp" "Shader.cpp" "Model.h" "Model.cpp" "src/RenderParticle.h" "src/RenderParticle.cpp"  "src/Physics/PhysicsWorld.h" "src/Physics/PhysicsWorld.cpp")
 
 #Link the required libraries
 target_link_libraries(GDPHYSX-Master1 PRIVATE 
