@@ -33,7 +33,8 @@ namespace Physics {
 
     glm::mat4 Camera::GetOrthoViewMatrix()
     {
-        return glm::lookAt(Position, Position + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1));
+        //return glm::lookAt(Position, Position + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1));
+        return glm::lookAt(Position, Position + Front, Up);
     }
 
     void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)

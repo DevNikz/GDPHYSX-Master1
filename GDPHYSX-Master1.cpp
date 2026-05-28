@@ -48,16 +48,15 @@ public:
 
 #endif
 
-float windowWidth = 800;
-float windowHeight = 800;
-
 std::mt19937 rng(42); // seed for reproducibility
 std::uniform_real_distribution<float> dist(-25.f, 25.f);
 
 PerspectiveCamera thirdPerson(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 PerspectiveCamera firstPerson(glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-OrthographicCamera topDown(glm::vec3(0.f, 0.0f, 1.0f));
+OrthographicCamera topDown(glm::vec3(0.f, 0.0f, 1.f));
 
+float windowWidth = 700;
+float windowHeight = 700;
 float lastX = windowWidth / 2.0f;
 float lastY = windowHeight / 2.0f;
 bool firstMouse = true;
@@ -518,11 +517,35 @@ void Skybox::InitSky() {
 }
 #endif
 
+bool stopAtCenter(Particle& p, float threshold = 5.f) {
+    if (glm::length(glm::vec2(p.Position.x, p.Position.y)) <= threshold) {
+        p.Position.x = 0.f;
+        p.Position.y = 0.f;
+        p.Velocity = glm::vec3(0.f);
+        p.Acceleration = glm::vec3(0.f);
+        return true;
+    }
+    else return false;
+}
+
+struct ParticleResult {
+    std::string name;
+    glm::vec3 color;
+    int rank = 0;
+    float finalSpeed = 0.f;
+    glm::vec3 avgVelocity = glm::vec3(0.f);
+    float time = 0.f;
+    bool finished = false;
+    
+    glm::vec3 startPos;
+    float elapsedTime = 0.f;
+};
 
 //MAIN
 int main(void)
 {
-    constexpr std::chrono::nanoseconds timestep(16ms);
+    constexpr std::chrono::nanoseconds timestep(6944444);
+    
 
     GLFWwindow* window;
     /* Initialize the library */
@@ -531,7 +554,7 @@ int main(void)
     /* Create a windowed mode window and its OpenGL context */
     glfwWindowHint(GLFW_SAMPLES, 8);
 
-    window = glfwCreateWindow(windowWidth, windowHeight, "GDPHYSICS-Niks", NULL, NULL);
+    window = glfwCreateWindow(windowWidth, windowHeight, "PC01 Paul Nikko Ragudo", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -546,15 +569,20 @@ int main(void)
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
-    Physics::Shader noobShader("Shaders/noobShader.vert", "Shaders/noobShader.frag");
+    //Camera instances
+    topDown.Projection = glm::ortho(
+        -700.f, //L
+        700.f, //R
+        -700.f, //Bottom
+        700.f, //Top
+        -700.f, //Near
+        700.f //Far
+    );
 
-    //Load Vertices
-    GLfloat vertices[]{
-        0.f, 0.5f, 0.f,     //0
-        -1.f, -0.f, 0.f,    //1
-        0.5f, -0.5f, 0.f    //2
-    };
-    GLuint indices[]{ 0,1,2 };
+    Shader noobShader("Shaders/noobShader.vert", "Shaders/noobShader.frag");
+
+    std::list<RenderParticle*> RenderParticles;
+    float edge = 650.f;
 
     //Skybox skybox("cubemap1_right", "cubemap1_left", "cubemap1_top", "cubemap1_bottom", "cubemap1_front", "cubemap1_back");
     //skybox.InitSky();
@@ -563,24 +591,43 @@ int main(void)
     //Model shipmentObj = Model("Sci-fi Large container", "Sci-fi Container _Base_Color", ".png", "Sci-fi Container _Normal_OpenGL", ".png", "", "", "3D/");
     Physics::Model sphereModel = Physics::Model("sphere", "", "");
 
-    //Create new model plane then initialize texture, overlay map, and normals
-    //newModel.InitModel();
-    //newModel.InitTextures();
-    //newModel.InitNormals();
-
     sphereModel.InitModel();
-    sphereModel.Scale(glm::vec3(100.f));
+    sphereModel.Scale(glm::vec3(10.f));
     sphereModel.AssignShader(&noobShader);
 
-    //Camera instances
-    topDown.Projection = glm::ortho(
-        -400.f, //L
-        400.f, //R
-        -400.f, //Bottom
-        400.f, //Top
-        -400.0f, //Near
-        400.f //Far
-    );
+    //Red
+    Physics::Particle p1;
+    p1.Position = glm::vec3(-edge, edge, 201.f);
+    p1.Velocity = glm::vec3(80.f, -80.f, 0.f);
+    p1.Acceleration = glm::vec3(14.5f, -14.5f, 0.f);
+
+    //Green
+    Physics::Particle p2;
+    p2.Position = glm::vec3(edge, edge, 173.f);
+    p2.Velocity = glm::vec3(-90.f, -90.f, 0.f);
+    p2.Acceleration = glm::vec3(-8.f, -8.f, 0.f);
+
+    //Blue
+    Physics::Particle p3;
+    p3.Position = glm::vec3(edge, -edge, -300.f);
+    p3.Velocity = glm::vec3(-130.f, 130.f, 0.f);
+    p3.Acceleration = glm::vec3(-1.f, 1.f, 0.f);
+
+    //Yellow
+    Physics::Particle p4;
+    p4.Position = glm::vec3(-edge, -edge, -150.f);
+    p4.Velocity = glm::vec3(110.f, 110.f, 0.f);
+    p4.Acceleration = glm::vec3(3.f, 3.f, 0.f);
+
+    
+    RenderParticle rp1 = RenderParticle(&p1, &sphereModel, glm::vec3(0.5f, 0.f, 0.f));
+    RenderParticle rp2 = RenderParticle(&p2, &sphereModel, glm::vec3(0.f, 0.5f, 0.f));
+    RenderParticle rp3 = RenderParticle(&p3, &sphereModel, glm::vec3(0.f, 0.f, 0.5f));
+    RenderParticle rp4 = RenderParticle(&p4, &sphereModel, glm::vec3(0.5f, 0.5f, 0.f));
+    RenderParticles.push_back(&rp1);
+    RenderParticles.push_back(&rp2);
+    RenderParticles.push_back(&rp3);
+    RenderParticles.push_back(&rp4);
 
     //Enable anti-aliasing and blend
     glEnable(GL_MULTISAMPLE);
@@ -589,13 +636,18 @@ int main(void)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
 
-    Physics::Particle particle = Physics::Particle();
-    particle.Velocity = glm::vec3(250, 0, 0);
-
     using clock = std::chrono::high_resolution_clock;
     auto curr_time = clock::now();
     auto prev_time = curr_time;
     std::chrono::nanoseconds curr_ns(0);
+
+    ParticleResult results[4];
+    results[0] = { "Red", glm::vec3(1,0,0), 0, 0, glm::vec3(0.f), 0, false, p1.GetPosition()};
+    results[1] = { "Green", glm::vec3(0,1,0), 0, 0, glm::vec3(0.f), 0, false, p2.GetPosition() };
+    results[2] = { "Blue", glm::vec3(0,0,1), 0, 0, glm::vec3(0.f), 0, false, p3.GetPosition() };
+    results[3] = { "Yellow", glm::vec3(1,1,0), 0, 0, glm::vec3(0.f), 0, false, p4.GetPosition() };
+
+    int rankCounter = 1;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -603,19 +655,33 @@ int main(void)
         /* Poll for and process events */
         glfwPollEvents();
 
-        //Right side
-        if (particle.GetPosition().x > 350) {
-            particle.Velocity = glm::vec3(-250, 0, 0);
-        }
-
-        //Left side
-        if (particle.GetPosition().x < -350) {
-            particle.Velocity = glm::vec3(250, 0, 0);
-        }
-
         curr_time = clock::now();
         auto dur = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - prev_time);
         prev_time = curr_time;
+
+        auto checkFinish = [&](Particle& p, ParticleResult& r, float t, float threshold = 5.f) {
+            if (r.finished) return;
+
+            r.elapsedTime += t;
+
+            if (glm::length(glm::vec2(p.Position.x, p.Position.y)) <= threshold) {
+                p.Position.x = 0.f;
+                p.Position.y = 0.f;
+
+                r.finished = true;
+                r.rank = rankCounter++;
+                r.time = r.elapsedTime;
+                r.finalSpeed = glm::length(p.Velocity);
+
+                //float totalDist = glm::length(glm::vec2(r.startPos.x, r.startPos.y));
+                glm::vec3 displacement = glm::vec3(0.f) - r.startPos;
+                r.avgVelocity = displacement / r.time;
+
+                p.Velocity = glm::vec3(0.f);
+                p.Acceleration = glm::vec3(0.f);
+            }
+
+        };
 
         curr_ns += dur;
         if (curr_ns >= timestep) {
@@ -623,7 +689,21 @@ int main(void)
             curr_ns -= timestep;
 
             //Physics Update
-            particle.Update(timestep_sec);
+            p1.Update(timestep_sec);
+            checkFinish(p1, results[0], timestep_sec);
+            
+            p2.Update(timestep_sec);
+            checkFinish(p2, results[1], timestep_sec);
+
+            p3.Update(timestep_sec);
+            checkFinish(p3, results[2], timestep_sec);
+
+            p4.Update(timestep_sec);
+            checkFinish(p4, results[3], timestep_sec);
+
+            if (results[0].finished && results[1].finished && results[2].finished && results[3].finished) {
+                glfwSetWindowShouldClose(window, true);
+            }
         }
 
         //Normal Update
@@ -652,8 +732,12 @@ int main(void)
         noobShader.use();
         noobShader.passOrthoCamera(topDown);
 
-        sphereModel.Position(particle.Position);
-        sphereModel.DrawModel();
+        for (list<RenderParticle*>::iterator i = RenderParticles.begin(); i != RenderParticles.end(); i++) {
+            (*i)->Draw();
+        }
+
+        //sphereModel.Position(particle.Position);
+        //sphereModel.DrawModel();
 
         /*
         defaultShader.use();
@@ -678,12 +762,28 @@ int main(void)
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
-
-        
     }
 
     //Tank
     sphereModel.DeleteBuffers();
+    
+    std::cout << std::fixed << std::setprecision(2);
+    std::vector<ParticleResult*> sorted = { &results[0], &results[1], &results[2], &results[3] };
+    std::sort(sorted.begin(), sorted.end(), [](ParticleResult* a, ParticleResult* b) {
+        return a->rank < b->rank;
+        });
+
+    for (auto* r : sorted) {
+        std::cout << "-----------------------------\n";
+        std::cout << "Rank:              #" << r->rank << " - " << r->name << "\n";
+        std::cout << "Final Speed:       " << r->finalSpeed << " m/s\n";
+        std::cout << "Average Velocity:  ("
+            << r->avgVelocity.x << " m/s, "
+            << r->avgVelocity.y << " m/s, "
+            << r->avgVelocity.z << " m/s)\n";
+        std::cout << "Time to Center:    " << r->time << " s\n";
+    }
+    std::cout << "=============================\n";
 
     //Terminate gl
     glfwTerminate();

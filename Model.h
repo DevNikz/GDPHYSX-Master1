@@ -24,6 +24,7 @@ namespace Physics {
 
             glm::vec3 scale = glm::vec3(1.f);
             glm::vec3 pos = glm::vec3(1.f);
+            glm::vec3 color = glm::vec3(1.f);
 
             Physics::Shader* shader;
 
@@ -48,6 +49,7 @@ namespace Physics {
 
             void Scale(glm::vec3 s);
             void Position(glm::vec3 p);
+            void Color(glm::vec3 c);
 
             //GLuint GetDiffuse();
             //GLuint GetNormal();

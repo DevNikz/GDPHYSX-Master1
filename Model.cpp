@@ -35,6 +35,7 @@ namespace Physics {
         m = glm::translate(m, pos);
         m = glm::scale(m, scale);
         this->shader->setMat4("transform", 1, m);
+        this->shader->setVec3("objectColor", 1, color);
 
         glBindVertexArray(vao);
         //Vertex Data Method
@@ -50,6 +51,11 @@ namespace Physics {
         pos = p;
     }
 
+    void Model::Color(glm::vec3 c)
+    {
+        color = c;
+    }
+         
     void Model::DeleteBuffers() {
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
